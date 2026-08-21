@@ -1,0 +1,14 @@
+# dsh-skin-desktop profile patch
+# - insert the Electron-first skin package (loader entry)
+# - disable the Web surface's auto-open (openBrowser) when running inside the
+#   Electron shell (DSH_DESKTOP=1). Without this, every desktop launch also
+#   opens the system browser at http://127.0.0.1:3081 via `open`.
+- insert:
+    - id: skin-desktop
+      name: 'dsh-skin-desktop'
+- id: web-runtime
+  config:
+    openBrowser: !!js process.env.DSH_DESKTOP ? false : ctx.webStartup.openBrowser
+    printUrl: true
+    surfaceContext: true
+    trustedHosts: !!js ctx.webStartup.trustedHosts

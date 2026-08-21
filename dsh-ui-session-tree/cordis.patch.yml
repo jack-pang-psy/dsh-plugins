@@ -1,0 +1,6 @@
+# dsh-ui-session-tree profile patch — insert one loader entry so the web
+# profile loads the package (host half is a no-op; the browser half is picked
+# up by dsh-client-modules through the package's dsh.client declaration).
+- insert:
+    - id: session-tree
+      name: 'dsh-ui-session-tree'

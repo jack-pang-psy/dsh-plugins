@@ -1,0 +1,26 @@
+# dsh-tool-subagent-vision bundle patch.
+#
+# Registers the `subagent_vision` tool on the HOST plane: spawn a
+# vision-capable subagent (child inherits the parent's preset — its tool
+# suite includes read_image — but runs on a vision model via
+# `agentOptions`, which the subagent registry natively supports). The
+# parent's own model route is untouched.
+#
+# Image translation needs no provider registration: the vision call goes
+# through the existing opencode-go gateway and API key already configured
+# for this deployment (no new secret, no external gateway), and the
+# request-layer replacement runs entirely inside the harness LLM service.
+# The former `vision-auto` pi-ai provider profile was retired together
+# with the legacy agent/request reroute.
+- insert:
+    - id: tool-subagent-vision
+      name: 'dsh-tool-subagent-vision'
+      config:
+        provider: spawn
+        modelProvider: opencode-go
+        model: qwen3.7-plus
+        enableRunInBackground: true
+        translateImages: true
+        translateModelProvider: opencode-go
+        translateModel: qwen3.7-plus
+        translateTimeoutMs: 120000

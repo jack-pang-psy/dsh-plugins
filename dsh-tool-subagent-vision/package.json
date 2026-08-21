@@ -1,0 +1,21 @@
+{
+  "name": "dsh-tool-subagent-vision",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "main": "lib/index.js",
+  "description": "Vision input for DeepSeek Harness: request-layer image translation (image blocks are replaced by their vision-model translation before a text-only model sees them, cached per attachment) plus a subagent_vision delegation tool.",
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-subagent": "*",
+    "@deepseek-ai/dsh-tools": "*",
+    "@deepseek-ai/schemastery": "*"
+  }
+}
