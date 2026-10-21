@@ -1,0 +1,9 @@
+- insert:
+    - id: decision-agent
+      name: dsh-decision-agent
+    - id: tool-subagent-decision
+      name: '@deepseek-ai/dsh-tool-subagent'
+      config:
+        provider: decision
+        toolName: subagent_decision
+        maxDepth: provider-managed
