@@ -1,0 +1,8 @@
+# Runtime-only install for this dist fork (see FORK.md): `pnpm install --prod`.
+# Mirrors the desktop profile's settings. Peers are deliberately not installed:
+# dsh-app-boot routes every peerDependency of a linked package to the DSH
+# installation copy, so only the non-peer dependencies are loaded from here.
+packages:
+  - .
+nodeLinker: hoisted
+autoInstallPeers: false
