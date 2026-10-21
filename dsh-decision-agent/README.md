@@ -24,7 +24,7 @@ Claude Code 是运行工具，并不要求底层一定是 Anthropic 模型。它
 ## 实现边界
 
 - Codex 复用已安装的 `@deepseek-ai/dsh-subagent-codex` 适配器、认证、进程生命周期和错误处理。模型通过适配器配置覆盖，思考强度通过本次 app-server 命令的配置覆盖传递。
-- Claude Code 同样复用已安装的 `@deepseek-ai/dsh-subagent-claude-code` 适配器：由其官方 Agent SDK 驱动运行和清理进程，但启动的是本机 `claude`，只有这一个 CLI 进程。认证读取 `~/.claude` 原生配置与钥匙串。模型通过适配器配置覆盖；适配器启动 CLI 时追加 `--tools Read,Glob,Grep`、`--safe-mode`（关闭 CLAUDE.md、插件、hooks、MCP 等定制）、只读审查提示词和所选思考强度。若适配器自身的启动参数已包含这些项、MCP/插件目录或非 `dontAsk` 权限模式，拒绝运行。适配器本身没有运行时限，决策运行保留 15 分钟上限。适配器的 SDK 协议版本固定（当前 0.3.263），本机 CLI 升级后应重跑 `--claude-only --smoke` 确认兼容。
+- Claude Code 同样复用已安装的 `@deepseek-ai/dsh-subagent-claude-code` 适配器：由其官方 Agent SDK 驱动运行和清理进程，但启动的是本机 `claude`，只有这一个 CLI 进程。认证读取 `~/.claude` 原生配置与钥匙串。模型通过适配器配置覆盖；适配器启动 CLI 时追加 `--tools Read,Glob,Grep`、`--safe-mode`（关闭 CLAUDE.md、插件、hooks、MCP 等定制）、只读审查提示词和所选思考强度。若适配器自身的启动参数已包含这些项、MCP/插件目录或非 `dontAsk` 权限模式，拒绝运行。与 Codex 一致，不设运行时限，长时间运行由调用方取消。适配器的 SDK 协议版本固定（当前 0.3.263），本机 CLI 升级后应重跑 `--claude-only --smoke` 确认兼容。
 - 决策模式只读：Codex 使用只读文件沙箱；Claude Code 仅开放上述读取工具。实现任务由主代理执行。
 - 模型目录来自 Codex `model/list`、Claude Code 初始化协议；目录刷新不发起模型推理。列表缓存 5 分钟，可手动刷新。
 - 错误不会触发自动切换后端；取消、超时、无有效结果都不能计为成功。
@@ -52,7 +52,7 @@ python3 scripts/install.py
 npm test
 ```
 
-测试覆盖独立配置与持久化、并发编辑冲突、模型参数校验、两个后端的参数传递、只读参数冲突时拒绝运行、Claude Code 运行上限、HTTP 来源检查、运行中选择冻结。
+测试覆盖独立配置与持久化、并发编辑冲突、模型参数校验、两个后端的参数传递、只读参数冲突时拒绝运行、HTTP 来源检查、运行中选择冻结。
 
 以下脚本复用桌面应用内的模块进行集成验证：
 

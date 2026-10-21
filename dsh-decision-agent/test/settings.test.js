@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createStore,DEFAULTS,validateSettings,codexOverrides,claudeCatalogArgs,claudeOverrides,CLAUDE_TOOLS,textTask} from '../lib/settings.js';
 import {trustedRequest} from '../lib/http.js';
-import {captureCodex,captureClaude,withDeadline,makeProvider} from '../lib/runtime.js';
+import {captureCodex,captureClaude,makeProvider} from '../lib/runtime.js';
 
 test('backend switching persists each independent selection and rejects stale writes',()=>{
  const dir=mkdtempSync(join(tmpdir(),'decision-test-'));try{
@@ -48,13 +48,6 @@ test('Claude refuses adapter argv that could widen tools or permissions',()=>{
  const base=['/x/claude','--permission-mode','dontAsk'];
  for(const argv of [['/x/claude'],['/x/claude','--permission-mode','bypassPermissions'],[...base,'--tools','default'],[...base,'--mcp-config','{}'],[...base,'--allow-dangerously-skip-permissions']])assert.throws(()=>claudeOverrides(argv,{model:'',effort:''}),/冲突/);
  assert.throws(()=>claudeOverrides(base,{model:'',effort:'ultra'}),/思考强度/);
-});
-test('Claude runs stop at the deadline instead of hanging',async()=>{
- let disposed=0;const run=withDeadline({id:'r',result:new Promise(()=>{}),dispose:async()=>{disposed++;}},10,'超时');
- assert.deepEqual(await run.result,{output:[],stopReason:'error',diagnostic:'超时'});
- await new Promise(r=>setImmediate(r));assert.equal(disposed,1);
- const fast=withDeadline({id:'f',result:Promise.resolve({output:[],stopReason:'completed'}),dispose:async()=>{}},60000,'x');
- assert.equal((await fast.result).stopReason,'completed');
 });
 test('the saved Claude selection drives the built-in adapter',async()=>{
  const value={...structuredClone(DEFAULTS),backend:'claude',claude:{model:'opus',effort:'max'}};let config;const runs=[];

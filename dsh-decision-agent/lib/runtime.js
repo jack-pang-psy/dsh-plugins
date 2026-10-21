@@ -1,7 +1,6 @@
 import { textTask, codexOverrides, claudeOverrides } from './settings.js';
 import { findClaude } from './catalog.js';
 
-export const CLAUDE_DEADLINE_MS = 15*60*1000;
 export function captureCodex(applyCodex, ctx, settings) {
   let provider;
   applyCodex({
@@ -23,12 +22,7 @@ export function captureClaude(applyClaude, ctx, settings, binary=findClaude()) {
   if(!provider?.start)throw new Error('Claude Code 适配器不兼容当前 Harness 版本。');
   return provider;
 }
-// The built-in Claude Code adapter has no wall-clock limit; decision runs keep their previous cap.
-export function withDeadline(run, ms, diagnostic) {
-  let timer;
-  const expired=new Promise(resolve=>{timer=setTimeout(()=>{void Promise.resolve().then(()=>run.dispose()).catch(()=>{});resolve({output:[],stopReason:'error',diagnostic});},ms);});
-  return {...run,result:Promise.race([run.result,expired]).finally(()=>clearTimeout(timer))};
-}
+// Like Codex, Claude Code runs have no wall-clock limit; long runs are cancelled by the caller.
 export function makeProvider({ctx,store,applyCodex,applyClaude,claudeBinary=findClaude,onRun=()=>{}}) {
   return {
     name:'decision',inheritsParentContext:false,
@@ -37,7 +31,7 @@ export function makeProvider({ctx,store,applyCodex,applyClaude,claudeBinary=find
       textTask(request.prompt);
       const selection=structuredClone(store.read().settings);
       const backend=selection.backend;
-      const run=backend==='codex' ? await captureCodex(applyCodex,ctx,selection.codex).start(request) : withDeadline(await captureClaude(applyClaude,ctx,selection.claude,claudeBinary()).start(request),CLAUDE_DEADLINE_MS,'Claude Code 超过 15 分钟运行上限，已停止。');
+      const run=backend==='codex' ? await captureCodex(applyCodex,ctx,selection.codex).start(request) : await captureClaude(applyClaude,ctx,selection.claude,claudeBinary()).start(request);
       const info={backend,model:selection[backend].model||'原生默认',effort:selection[backend].effort||'原生默认',startedAt:Date.now(),status:'running'};
       onRun(info);
       const result=run.result.then(value=>{onRun({...info,status:value.stopReason,finishedAt:Date.now()});return value;},()=>{onRun({...info,status:'error',finishedAt:Date.now()});return {output:[],stopReason:'error',diagnostic:'决策子代理未正常完成。'};});
