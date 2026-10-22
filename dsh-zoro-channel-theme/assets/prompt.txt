@@ -1,0 +1,10 @@
+Tool: built-in image_gen (transparent_background: true)
+Generated: 2026-10-21
+
+Use case: stylized-concept
+Asset type: transparent full-body character standing illustration for a desktop chat theme, tall portrait composition.
+Primary request: Roronoa Zoro from One Piece, recognizable adult male swordsman, full body head to boots entirely visible. Short spiky moss-green hair, closed scarred left eye, three small gold earrings on his left ear, muscular build, serious calm confident expression. Classic post-timeskip outfit: open deep forest green long robe exposing a diagonal chest scar, green haramaki waist sash, dark red sash with THREE sheathed katana at his right hip, black bandana tied around left upper arm, black boots. Standing relaxed with one hand resting on the katana hilts, body facing slightly left, looking at viewer. Exactly two arms and anatomically correct hands. Three sheathed swords, no sword in mouth.
+Style/medium: polished Japanese shonen anime character illustration with precise clean line art, crisp cel shading and subtle textured fabric. Detailed face, handsome and stern, strong silhouette readable at 250px tall.
+Composition/framing: solitary character centered, vertical 2:3 image, generous transparent margin, all swords and feet inside frame. True transparent alpha background, isolated clean cutout.
+Lighting/mood: subtle warm gold rim light and neutral soft frontal lighting. Natural colors, no green glow.
+Constraints: no text, no logo, no watermark, no environment, no ground plane, no other characters, no decorative aura or effects. Background must be genuinely transparent.

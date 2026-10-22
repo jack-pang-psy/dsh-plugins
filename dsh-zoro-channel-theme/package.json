@@ -1,0 +1,46 @@
+{
+  "name": "dsh-zoro-channel-theme",
+  "version": "0.1.5",
+  "description": "索隆 · 三刀流 / 阎魔主题，含全身立绘、首页 Q 版、桑尼号伙伴及对话状态表情",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-settings": "^0.1.7-rc.1 || ^0.2.0-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.1-rc.1",
+    "react": "^18.2.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

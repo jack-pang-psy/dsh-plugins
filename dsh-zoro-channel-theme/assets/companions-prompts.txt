@@ -1,0 +1,23 @@
+Tool: built-in image_gen, transparent_background=true. Generated 2026-10-21.
+
+ZORO SPRITE SHEET
+Use case: stylized-concept
+Asset type: 2-by-2 sprite sheet of Roronoa Zoro from One Piece, for four status poses in a desktop chat companion theme.
+Create exactly FOUR separate chibi Zoro illustrations, one centered in each equal square quadrant of a square 1024x1024 transparent canvas. Quadrants meet at x=512,y=512. Each character occupies the central 80% of its own cell, has identical scale, and sits with feet at the same baseline (90% down its cell). NO borders, NO labels, NO lettering, NO background, NO shadows on ground. True transparent alpha outside characters. All four characters completely separated and wholly contained in their cell with clear transparent gutter.
+Subject: same recognizable cute adult swordsman in all four cells: moss-green spiky hair, left eye closed with vertical scar, three gold earrings on left ear, forest green open robe, green waist wrap, burgundy sash, three sheathed katana at right hip, black boots. Chibi proportions, oversized head about half body height, clean manga linework, refined cel shading, warm expressive face. Full seated/compact body visible. Not photoreal, not pixel art.
+Top-left: idle, seated cross-legged with arms folded, cool slightly amused expression.
+Top-right: success, seated compact pose, a confident grin and thumbs up, tiny gold sparkle near head INSIDE cell.
+Bottom-left: running/work, concentrating intensely on a small parchment map, eyebrows furrowed, alert determined expression, green bandana tied on head but green hair still visible.
+Bottom-right: error/confused, holding the map upside down, funny annoyed expression and a tiny sweat bead, both eyes still keeping his LEFT eye scarred and closed.
+Important: uniform character scale, EXACTLY 2 rows and 2 columns, no fifth character, no text or watermark, transparent background.
+
+THOUSAND SUNNY SPRITE SHEET
+Use case: stylized-concept
+Asset type: 2-by-2 sprite sheet of a cute Thousand Sunny pirate ship companion from One Piece for a desktop theme.
+Exactly FOUR tiny stylized Thousand Sunny ships, one centered in each equal square quadrant of a 1024x1024 square canvas. Transparent alpha background. No grid borders or text. Each ship completely contained inside central 80% of its cell; identical size and angle, bottoms at 90% down each cell. Clear transparent gaps between cells, never touching.
+Subject: charming chibi interpretation of the Thousand Sunny, round smiling golden lion/sun figurehead facing slightly toward viewer, warm wood hull, miniature white sail with a tiny simple black skull wearing a straw hat, red and white upper details, small green leafy deck accents. Only the ship, no ocean or environment or wake. Clean anime line art, warm gold and cream palette, softly detailed cel shading, readable as a cute desktop mascot at 100 pixels. This is a SHIP with no human arms or legs.
+Top-left: idle, cheerful calm lion figurehead, relaxed white sail.
+Top-right: success, delighted lion figurehead, two tiny golden sparkles beside ship inside its cell.
+Bottom-left: running, wind-filled sail, energized determined lion figurehead, tiny gust line beside sail INSIDE its cell; ship remains same upright angle.
+Bottom-right: error, confused lion figurehead, slack sail and tiny blue sweat bead.
+Constraints: Exactly 2 rows by 2 columns, same scale and baseline in each cell, no labels, no watermark, no ground shadows, no background. Genuine transparent alpha outside all ships.
