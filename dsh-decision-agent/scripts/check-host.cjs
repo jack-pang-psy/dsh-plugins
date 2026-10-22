@@ -22,7 +22,7 @@ const req=createRequire(root+'/package.json');
   let status,body;
   const response={writeHead(s){status=s;},end(v){body=JSON.parse(v);}};
   await route.handler({method:'GET',url:'/decision-agent/api/state',headers:{host:'127.0.0.1:19387','x-dsh-decision':'1'}},response);
-  assert.equal(status,200);assert.equal(body.ok,true);assert.ok(body.settings.codex);assert.ok(body.settings.claude);
+  assert.equal(status,200);assert.equal(body.ok,true);assert.ok(body.settings.codex);assert.ok(body.settings.claude);assert.ok(body.settings.grok);
   console.log('PASS: desktop imports, provider registration, actual prefix routing and settings response');
  }finally{await context.fiber.dispose();}
 })().catch(e=>{console.error(e.message);process.exitCode=1;});

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,rmSync,readFileSync,writeFileSync,symlinkSync,existsSync,statSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {createStore,DEFAULTS,validateSettings,codexOverrides,claudeCatalogArgs,claudeOverrides,CLAUDE_TOOLS,textTask} from '../lib/settings.js';
+import {join,resolve} from 'node:path';
+import {createStore,DEFAULTS,validateSettings,codexOverrides,claudeCatalogArgs,claudeOverrides,CLAUDE_TOOLS,textTask,resolveDshHome,dataDir,writePrivateFile} from '../lib/settings.js';
 import {trustedRequest} from '../lib/http.js';
 import {captureCodex,captureClaude,makeProvider} from '../lib/runtime.js';
 
@@ -75,4 +75,47 @@ test('a running delegation keeps its initial selection when settings change',asy
 test('text-only task boundary rejects images and empty prompts',()=>{
  assert.throws(()=>textTask([{type:'image'}]));assert.throws(()=>textTask([{type:'text',text:' '}]))
  assert.equal(textTask([{type:'text',text:'one'},{type:'text',text:'two'}]),'one\n\ntwo');
+});
+test('DSH_HOME resolves like Harness: unset, absolute, relative, ~, ~/x and blank',()=>{
+ // Cases of resolveDshHome in @deepseek-ai/dsh-home-paths 0.2.1-rc.2, which was also run against this function with the Harness binary.
+ const home='/home/tester',at=value=>resolveDshHome(value===undefined?{}:{DSH_HOME:value},home);
+ assert.equal(at(undefined),'/home/tester/.dsh'); // unset: the default home
+ assert.equal(at('/srv/dsh'),'/srv/dsh'); // absolute: as given
+ assert.equal(at('dsh-alt'),resolve('dsh-alt')); // relative: made absolute
+ assert.equal(at('./a/../dsh-alt/'),resolve('dsh-alt'));
+ assert.equal(at('~'),'/home/tester'); // ~ expands to the OS home
+ assert.equal(at('~/dsh-alt'),'/home/tester/dsh-alt'); // ~/x
+ assert.equal(at('~\\dsh-alt'),'/home/tester/dsh-alt'); // ~\x
+ for(const blank of ['','   ','\t \n'])assert.equal(at(blank),'/home/tester/.dsh'); // blank counts as unset, never the working directory
+ const saved=process.env.DSH_HOME;
+ try{process.env.DSH_HOME='rel-home';assert.equal(dataDir(),resolve('rel-home','decision-agent'));} // dataDir only computes a path
+ finally{if(saved===undefined)delete process.env.DSH_HOME;else process.env.DSH_HOME=saved;}
+});
+test('private files are 0600, replace the old file atomically, and are created exclusively',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'decision-test-'));try{
+  const file=join(dir,'data','private.log'),victim=join(dir,'victim');
+  writePrivateFile(file,'first');
+  assert.equal(statSync(file).mode&0o777,0o600);assert.equal(statSync(join(dir,'data')).mode&0o777,0o700);
+  writeFileSync(victim,'untouched');
+  symlinkSync(victim,file+'.fixed.tmp'); // a link planted at the temp path must never be followed
+  assert.throws(()=>writePrivateFile(file,'second','fixed'),/EEXIST/);
+  assert.equal(readFileSync(victim,'utf8'),'untouched');assert.equal(readFileSync(file,'utf8'),'first');
+  rmSync(file+'.fixed.tmp');
+  writeFileSync(file,'loose',{mode:0o644});
+  writePrivateFile(file,'third');
+  assert.equal(readFileSync(file,'utf8'),'third');assert.equal(statSync(file).mode&0o777,0o600); // a looser old file does not leak its mode
+  mkdirSync(join(dir,'taken'));
+  assert.throws(()=>writePrivateFile(join(dir,'taken'),'x','gone')); // the final rename fails ...
+  assert.equal(existsSync(join(dir,'taken.gone.tmp')),false); // ... and the temp file is removed
+  assert.deepEqual(readdirSync(join(dir,'data')),['private.log']);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
+test('private writes close their file descriptors',t=>{
+ if(!existsSync('/dev/fd'))return t.skip('no /dev/fd on this platform');
+ const dir=mkdtempSync(join(tmpdir(),'decision-test-'));try{
+  const open=()=>readdirSync('/dev/fd').length,file=join(dir,'f.log');
+  writePrivateFile(file,'warm up');
+  const before=open();for(let i=0;i<40;i++)writePrivateFile(file,String(i));
+  assert.ok(open()-before<5,`${open()-before} descriptors leaked`);
+ }finally{rmSync(dir,{recursive:true,force:true});}
 });

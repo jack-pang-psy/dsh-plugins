@@ -1,4 +1,4 @@
-import { SettingsError } from './settings.js';
+import { SettingsError, BACKENDS } from './settings.js';
 export function trustedRequest(req, origin) {
   try {
     const server=new URL(origin),host=new URL('http://'+req.headers.host);
@@ -24,13 +24,13 @@ export function route({origin,store,catalogs,lastRun}) {
       }
       if(req.method==='GET'&&url.pathname==='/decision-agent/api/catalog'){
         const backend=url.searchParams.get('backend');
-        if(!['codex','claude'].includes(backend))throw new SettingsError('无效的子代理类型。');
+        if(!BACKENDS.includes(backend))throw new SettingsError('无效的子代理类型。');
         const catalog=await catalogs.get(backend,url.searchParams.get('refresh')==='1');respond(res,200,{ok:true,...catalog});return;
       }
       if(req.method==='POST'&&url.pathname==='/decision-agent/api/settings'){
         if(!String(req.headers['content-type']||'').startsWith('application/json'))throw new SettingsError('需要 JSON 请求。',415);
         const body=await readBody(req);
-        for(const backend of ['codex','claude']){
+        for(const backend of BACKENDS){
           const choice=body.settings?.[backend];
           const catalog=catalogs.peek(backend);
           const model=catalog?.models.find(m=>m.id===(choice?.model||catalog.defaults.model)) || (!choice?.model?catalog?.models.find(m=>m.id==='default'):undefined);

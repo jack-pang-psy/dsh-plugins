@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Unified Codex / Claude Code decision subagent with independent model settings.",
+  "description": "Unified Codex / Claude Code / Grok Build decision subagent with independent model settings.",
   "main": "lib/index.js",
   "exports": {".": "./lib/index.js", "./client": "./lib/client.js", "./package.json": "./package.json"},
   "scripts": {"test": "node --test test/*.test.js"},

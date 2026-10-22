@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { readFileSync, readdirSync, accessSync, constants } from 'node:fs';
 import { dirname, resolve, join, delimiter } from 'node:path';
 import { homedir } from 'node:os';
-import { claudeCatalogArgs, EFFORTS } from './settings.js';
+import { claudeCatalogArgs, EFFORTS, GROK_MODEL, GROK_MODELS } from './settings.js';
 
 export function codexArgv() {
   const require = createRequire(import.meta.url);
@@ -23,6 +23,15 @@ export function findClaude() {
     try { accessSync(p, constants.X_OK); return p; } catch {}
   }
   throw new Error('未找到 Claude Code。请安装 CLI 后重新打开 Harness。');
+}
+// Grok Build installs itself under ~/.grok/bin, which GUI-launched apps usually lack on PATH.
+export function findGrok() {
+  const dirs = (process.env.PATH || '').split(delimiter);
+  const candidates = [join(homedir(), '.grok/bin/grok'), ...dirs.map(d => join(d,'grok')), '/opt/homebrew/bin/grok', '/usr/local/bin/grok'];
+  for (const p of candidates) {
+    try { accessSync(p, constants.X_OK); return p; } catch {}
+  }
+  throw new Error('未找到 Grok Build。请安装 grok CLI 后重新打开 Harness。');
 }
 export async function stopChild(child) {
   try { child.stdin?.end(); } catch {}
@@ -104,13 +113,38 @@ export async function claudeCatalog(spawn, binary=findClaude()) {
   try {await child.done;const status=JSON.parse(output);if(typeof status.loggedIn==='boolean')catalog.authenticated=status.loggedIn;}catch{}finally{clearTimeout(timer);await stopChild(child);}
   return catalog;
 }
+// `grok models` lists the account's models without starting a model turn; only the curated GROK_MODELS are offered.
+export function parseGrokModels(text) {
+  const ids=[];let defaultModel='';
+  for(const line of text.split('\n')){
+    const m=/^\s*[-*]\s+([a-zA-Z0-9][a-zA-Z0-9._:\/-]*)(\s+\(default\))?\s*$/.exec(line);
+    if(m){ids.push(m[1]);if(m[2])defaultModel=m[1];}
+  }
+  return {ids,defaultModel,authenticated:/logged in/i.test(text)?true:(/not logged in|log in|login/i.test(text)?false:undefined)};
+}
+export async function grokCatalog(spawn, binary=findGrok()) {
+  const child=spawn({argv:[binary,'models'],cwd:homedir(),stdio:{stdin:'pipe',stdout:'pipe',stderr:'pipe'},env:{},graceMs:1000});
+  let output='';child.stdout.on('data',chunk=>{if(output.length<65536)output+=chunk.toString();});child.stderr?.resume();child.stdin?.on('error',()=>{});child.stdin?.end();
+  let timer;
+  try{
+    await Promise.race([child.done,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('读取模型列表超时，请检查 CLI 后重试。')),20000);})]);
+  }finally{clearTimeout(timer);await stopChild(child);}
+  const parsed=parseGrokModels(output);
+  // When the CLI lists models, offer only the curated ones the account actually has.
+  const models=GROK_MODELS.filter(m=>!parsed.ids.length||parsed.ids.includes(m.id)).map(m=>({...m,efforts:m.efforts.filter(e=>EFFORTS.grok.includes(e))}));
+  if(!models.length)throw new Error('当前 Grok 账号没有可用的 Grok 4.7 Build Fast / 4.7 / 4.6 模型。');
+  let effort='';
+  // Only the default effort scalar is read from the native config, never credentials.
+  try{const m=/^\s*default_reasoning_effort\s*=\s*"([a-z]+)"/m.exec(readFileSync(join(homedir(),'.grok/config.toml'),'utf8'));if(m&&EFFORTS.grok.includes(m[1]))effort=m[1];}catch{}
+  return {models,defaults:{model:GROK_MODEL,effort},authenticated:parsed.authenticated,source:'Grok Build CLI',fetchedAt:Date.now()};
+}
 export function createCatalogs(spawn) {
   const cached=new Map(),running=new Map();
   return {
     async get(backend,refresh=false){
       if(!refresh&&cached.has(backend)&&Date.now()-cached.get(backend).fetchedAt<300000)return cached.get(backend);
       if(running.has(backend))return running.get(backend);
-      const call=(backend==='codex'?codexCatalog(spawn):claudeCatalog(spawn)).then(value=>{cached.set(backend,value);return value;}).finally(()=>running.delete(backend));
+      const call=(backend==='codex'?codexCatalog(spawn):backend==='grok'?grokCatalog(spawn):claudeCatalog(spawn)).then(value=>{cached.set(backend,value);return value;}).finally(()=>running.delete(backend));
       running.set(backend,call);return call;
     },
     peek:backend=>cached.get(backend)

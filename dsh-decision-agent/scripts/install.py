@@ -20,12 +20,12 @@ end=updated.find('\n- id: ',start+1)
 if end<0:end=len(updated)
 block=updated[start:end]
 block=re.sub(r'(?m)^    name: .*$', '    name: 子Agent 决策模式',block,count=1)
-block=re.sub(r'(?m)^    description: .*$', '    description: 主代理负责具体编码与测试；由设置页选择 Codex 或 Claude Code，负责重要方案与关键结果审查。',block,count=1)
+block=re.sub(r'(?m)^    description: .*$', '    description: 主代理负责具体编码与测试；由设置页选择 Codex、Claude Code 或 Grok Build，负责重要方案与关键结果审查。',block,count=1)
 ss=block.index('          suffix: |\n');se=block.index('          prefix:',ss)
 suffix=block[ss:se]
 if '实际后端由设置页' not in suffix:
  suffix=suffix.replace('subagent_codex','subagent_decision').replace('Codex','所选决策子代理')
-suffix=suffix.replace('            本模式采用', '            通过 subagent_decision 调用决策子代理；实际后端由设置页选择 Codex 或 Claude Code。不要绕过统一入口直接调用某个产品后端。\n            本模式采用') if '实际后端由设置页' not in suffix else suffix
+suffix=suffix.replace('            本模式采用', '            通过 subagent_decision 调用决策子代理；实际后端由设置页选择 Codex、Claude Code 或 Grok Build。不要绕过统一入口直接调用某个产品后端。\n            本模式采用') if '实际后端由设置页' not in suffix else suffix
 suffix=re.sub(r'(?m)^            5\..*$', '            5. 决策子代理在只读模式下提供方案、约束、必要接口示例和审查意见；不得要求它修改文件、执行写操作或完成整套实现。具体编码与测试由主代理或其执行子代理完成。',suffix)
 block=block[:ss]+suffix+block[se:]
 # Keep the known preset row ID but route its model-facing tool through the unified provider.
