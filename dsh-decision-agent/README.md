@@ -21,6 +21,10 @@ Claude Code 是运行工具，并不要求底层一定是 Anthropic 模型。它
 
 不使用内置「Claude Code 子智能体」自带的 CLI：它跟随 Harness 更新，版本落后时较新的模型不可用（2026-10-21 实测自带 2.1.263 不识别 `claude-opus-5-5`，`opus` 只对应 Opus 5）。
 
+### Codex 与中转
+
+Codex 同样直接使用 `~/.codex` 的当前配置，cc-switch 切换的中转（`model_provider = "custom"`）无需 OpenAI 官方账号。设置页按 app-server 的元数据判断连接方式：`config/read` 的 `model_provider` 不是 `openai` 时显示为中转；登录提示读取 `account/read`，返回空账号时再以 `getAuthStatus`（不带 token）判断登录方式，中转声明 `requires_openai_auth = false` 时不检查 OpenAI 认证。两者都不刷新 token，避免改写与 Codex 其他客户端共用的 `auth.json`；因此 ChatGPT 登录的 access token 待刷新时也不会误报未登录（2026-10-26 以 codex 0.163.0 实测官方登录、两种中转和未登录四种情况）。
+
 ## 实现边界
 
 - Codex 复用已安装的 `@deepseek-ai/dsh-subagent-codex` 适配器、认证、进程生命周期和错误处理。模型通过适配器配置覆盖，思考强度通过本次 app-server 命令的配置覆盖传递。
@@ -35,7 +39,7 @@ Claude Code 是运行工具，并不要求底层一定是 Anthropic 模型。它
 
 ## 安装
 
-适配已安装的 Harness `0.2.1-rc.2` 插件接口。安装脚本仅创建本地链接和更新 profile，不下载依赖。
+适配 Harness `0.2.1-rc.2` 与 `0.2.1-rc.3` 的插件接口（两版的 Codex / Claude Code 适配器代码相同）。Harness 自 `0.2.1-rc.3` 起在启动时检查插件声明的 `@deepseek-ai/dsh-*` peer 版本，不满足即跳过整个插件；因此 peer 范围为 `^0.2.1-rc.2`，0.2.x 内的更新无需改动即可加载，适配器参数不兼容时仍由运行时拒绝。安装脚本仅创建本地链接和更新 profile，不下载依赖。
 
 ```sh
 python3 scripts/install.py

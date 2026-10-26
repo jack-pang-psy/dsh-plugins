@@ -82,14 +82,29 @@ export async function codexCatalog(spawn, argv = codexArgv()) {
       const r=await request('model/list',{limit:100,includeHidden:false,...cursor?{cursor}:{}});
       rows.push(...(r.data||[]));cursor=r.nextCursor;if(!cursor)break;
     }
+    let defaults={model:'',effort:''},connection='native';
+    try {
+      const r=await request('config/read',{includeLayers:false});
+      defaults={model:r.config?.model||'',effort:r.config?.model_reasoning_effort||''};
+      // Any provider other than OpenAI's is a relay (cc-switch switches Codex to "custom"); only its id is read, never its endpoint or token.
+      if(typeof r.config?.model_provider==='string'&&r.config.model_provider!=='openai')connection='relay';
+    }catch{}
     let authenticated;
-    try {const r=await request('account/read',{refreshToken:false});authenticated=Boolean(r.account);}catch{}
-    let defaults={model:'',effort:''};
-    try {const r=await request('config/read',{includeLayers:false});defaults={model:r.config?.model||'',effort:r.config?.model_reasoning_effort||''};}catch{}
+    try {authenticated=await codexAuthenticated(request);}catch{}
     const models=rows.filter(x=>typeof x.id==='string').map(x=>({id:x.model||x.id,label:x.displayName||x.id,description:x.description||'',efforts:(x.supportedReasoningEfforts||[]).map(e=>e.reasoningEffort).filter(e=>EFFORTS.codex.includes(e)),defaultEffort:x.defaultReasoningEffort||''}));
     if(!models.length)throw new Error('Codex 未返回可用模型。');
-    return {models,defaults,authenticated,source:'Codex app-server',fetchedAt:Date.now()};
+    return {models,defaults,authenticated,connection,source:'Codex app-server',fetchedAt:Date.now()};
   });
+}
+// Read without refreshing: a probe must not rewrite the auth file Codex shares with its other clients. Unrefreshed, a ChatGPT login whose
+// access token is due for renewal reads as account:null, so the auth status (token withheld) decides. A provider that needs no OpenAI
+// auth keeps its own credential, which is not checked here: unknown, not "logged out".
+async function codexAuthenticated(request) {
+  const r=await request('account/read',{refreshToken:false});
+  if(r.account)return true;
+  if(r.requiresOpenaiAuth===false)return undefined;
+  const status=await request('getAuthStatus',{includeToken:false,refreshToken:false});
+  return Boolean(status.authMethod);
 }
 export async function claudeCatalog(spawn, binary=findClaude()) {
   const catalog = await withLines(spawn,[binary,...claudeCatalogArgs()],({send,onMessage})=>new Promise((resolve,reject)=>{
